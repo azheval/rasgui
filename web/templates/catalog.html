@@ -1,0 +1,35 @@
+{{define "catalog.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="card">
+  <h2>{{t "catalog.title"}}</h2>
+  <div class="entity-panel">
+    <div class="entity-panel-head">
+      <span class="section-label">{{t "field.entity"}}</span>
+    </div>
+    <div id="catalog_entity_filters" class="filter-pills"></div>
+  </div>
+  <div class="catalog-toolbar">
+    <label>{{t "field.search"}}<input id="catalog_search"></label>
+  </div>
+  <div class="table-wrap table-catalog">
+    <table id="catalog_table">
+      <thead><tr><th>ID</th><th>{{t "table.utility"}}</th><th>{{t "table.operation"}}</th><th>{{t "table.risk"}}</th><th>{{t "table.description"}}</th></tr></thead>
+      <tbody>
+      {{range .Operations}}
+        <tr data-search="{{.ID}} {{.Utility}} {{.Title}} {{.Description}}" data-mode="{{.Mode}}">
+          <td><code>{{.ID}}</code></td>
+          <td>{{.Utility}}</td>
+          <td>{{.Title}}</td>
+          <td><span class="risk-badge risk-{{.RiskLevel}}">{{.RiskLevel}}</span></td>
+          <td>{{.Description}}</td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+<script>
+window.rasguiOperations = {{.OperationsJS}};
+</script>
+<script src="/static/js/app.js"></script>
+{{end}}

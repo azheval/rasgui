@@ -1,0 +1,220 @@
+{{define "roles.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="grid two">
+  <article class="card">
+    <h2>{{t "roles.create"}}</h2>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="action" value="create_role">
+      <label>{{t "field.name"}}<input name="name" required></label>
+      <label>{{t "field.description"}}<input name="description"></label>
+      <button type="submit">{{t "button.create_role"}}</button>
+    </form>
+  </article>
+  <article class="card">
+    <h2>{{t "roles.permission"}}</h2>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="action" value="add_permission">
+      <label>{{t "field.role"}}
+        <select name="role_id" required>{{range .Roles}}<option value="{{.ID}}">{{.Name}}</option>{{end}}</select>
+      </label>
+      <label>{{t "field.operation"}}
+        <select name="operation_id" required>
+          <option value="*">{{t "field.all_operations"}}</option>
+          {{range .Operations}}<option value="{{.ID}}">{{.ID}}</option>{{end}}
+        </select>
+      </label>
+      <label>{{t "field.cluster_scope"}}<input name="cluster_scope" value="*"></label>
+      <label>{{t "field.infobase_scope"}}<input name="infobase_scope" value="*"></label>
+      <button type="submit">{{t "button.add_permission"}}</button>
+    </form>
+  </article>
+</section>
+<section class="card">
+  <h2>{{t "roles.list"}}</h2>
+  {{range .Roles}}
+  <div class="role-box">
+    {{$role := .}}
+    <div class="entity-panel-head">
+      <h3>{{.Name}}</h3>
+      {{if not .System}}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        <input type="hidden" name="action" value="delete_role">
+        <input type="hidden" name="role_id" value="{{.ID}}">
+        <button type="submit">{{t "button.delete_role"}}</button>
+      </form>
+      {{end}}
+    </div>
+    <p>{{.Description}}</p>
+    <p class="subtle-note">
+      {{t "field.cluster_scope"}}: <strong>{{roleScopeSummary . "cluster"}}</strong><br>
+      {{t "field.infobase_scope"}}: <strong>{{roleScopeSummary . "infobase"}}</strong>
+    </p>
+    <table>
+      <thead><tr><th>{{t "table.operation"}}</th><th>{{t "table.cluster"}}</th><th>{{t "table.infobase"}}</th></tr></thead>
+      <tbody>
+      {{range .Permissions}}
+        <tr><td><code>{{.OperationID}}</code></td><td>{{.ClusterScope}}</td><td>{{.InfobaseScope}}</td></tr>
+      {{else}}
+        <tr><td colspan="3">No permissions</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+    {{if not .System}}
+    <div class="scope-set-list">
+      {{range roleScopeSets .}}
+      {{$scopeSet := .}}
+      <div class="scope-set-card">
+        <div class="entity-panel-head">
+          <span class="section-label">{{t "roles.scope_set"}}</span>
+          <form method="post">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+            <input type="hidden" name="action" value="delete_scope_set">
+            <input type="hidden" name="role_id" value="{{$role.ID}}">
+            <input type="hidden" name="cluster_scope" value="{{$scopeSet.ClusterScope}}">
+            <input type="hidden" name="infobase_scope" value="{{$scopeSet.InfobaseScope}}">
+            <button type="submit">{{t "button.delete_scope_set"}}</button>
+          </form>
+        </div>
+        <form method="post" class="matrix-form">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+          <input type="hidden" name="action" value="save_scope_set">
+          <input type="hidden" name="role_id" value="{{$role.ID}}">
+          <input type="hidden" name="old_cluster_scope" value="{{$scopeSet.ClusterScope}}">
+          <input type="hidden" name="old_infobase_scope" value="{{$scopeSet.InfobaseScope}}">
+          <div class="toolbar-grid">
+            <label>{{t "field.cluster_scope"}}
+              <textarea name="cluster_scope" rows="3">{{$scopeSet.ClusterScope}}</textarea>
+              <span class="subtle-note">{{t "roles.scope_hint"}}</span>
+            </label>
+            <label>{{t "field.infobase_scope"}}
+              <textarea name="infobase_scope" rows="3">{{$scopeSet.InfobaseScope}}</textarea>
+              <span class="subtle-note">{{t "roles.scope_hint"}}</span>
+            </label>
+          </div>
+          <label>{{t "field.search"}}<input class="matrix-search"></label>
+          {{range $.RoleMatrix}}
+          <div class="matrix-section">
+            <div class="entity-panel-head">
+              <span class="section-label">{{.Mode}}</span>
+              <span class="subtle-note">{{t "roles.matrix_hint"}}</span>
+            </div>
+            <div class="matrix-bundles">
+              {{range .BundleLabels}}
+              <button type="button" class="bundle-toggle" data-bundle="{{.}}">{{t (printf "bundle.%s" .)}}</button>
+              {{end}}
+              <button type="button" class="bundle-toggle" data-bundle="all">{{t "field.all_operations"}}</button>
+              <button type="button" class="bundle-toggle" data-bundle="none">{{t "button.clear_selection"}}</button>
+            </div>
+            <div class="matrix-grid">
+              {{range .Operations}}
+              <label class="matrix-item" data-search="{{.Operation.ID}} {{.Operation.Title}} {{.Bundle}}">
+                <input type="checkbox" name="operation_ids" value="{{.Operation.ID}}" data-bundle="{{.Bundle}}" {{if scopeSetHas $scopeSet .Operation.ID}}checked{{end}}>
+                <span>
+                  <strong>{{.Operation.Title}}</strong>
+                  <small><code>{{.Operation.ID}}</code> · {{.Bundle}}</small>
+                </span>
+              </label>
+              {{end}}
+            </div>
+          </div>
+          {{end}}
+          <button type="submit">{{t "button.save_matrix"}}</button>
+        </form>
+      </div>
+      {{end}}
+
+      <div class="scope-set-card">
+        <div class="entity-panel-head">
+          <span class="section-label">{{t "roles.new_scope_set"}}</span>
+          <span class="subtle-note">{{t "roles.scope_hint"}}</span>
+        </div>
+        <form method="post" class="matrix-form">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+          <input type="hidden" name="action" value="save_scope_set">
+          <input type="hidden" name="role_id" value="{{.ID}}">
+          <input type="hidden" name="old_cluster_scope" value="">
+          <input type="hidden" name="old_infobase_scope" value="">
+          <div class="toolbar-grid">
+            <label>{{t "field.cluster_scope"}}
+              <textarea name="cluster_scope" rows="3">*</textarea>
+              <span class="subtle-note">{{t "roles.scope_hint"}}</span>
+            </label>
+            <label>{{t "field.infobase_scope"}}
+              <textarea name="infobase_scope" rows="3">*</textarea>
+              <span class="subtle-note">{{t "roles.scope_hint"}}</span>
+            </label>
+          </div>
+          <label>{{t "field.search"}}<input class="matrix-search"></label>
+          {{range $.RoleMatrix}}
+          <div class="matrix-section">
+            <div class="entity-panel-head">
+              <span class="section-label">{{.Mode}}</span>
+              <span class="subtle-note">{{t "roles.matrix_hint"}}</span>
+            </div>
+            <div class="matrix-bundles">
+              {{range .BundleLabels}}
+              <button type="button" class="bundle-toggle" data-bundle="{{.}}">{{t (printf "bundle.%s" .)}}</button>
+              {{end}}
+              <button type="button" class="bundle-toggle" data-bundle="all">{{t "field.all_operations"}}</button>
+              <button type="button" class="bundle-toggle" data-bundle="none">{{t "button.clear_selection"}}</button>
+            </div>
+            <div class="matrix-grid">
+              {{range .Operations}}
+              <label class="matrix-item" data-search="{{.Operation.ID}} {{.Operation.Title}} {{.Bundle}}">
+                <input type="checkbox" name="operation_ids" value="{{.Operation.ID}}" data-bundle="{{.Bundle}}">
+                <span>
+                  <strong>{{.Operation.Title}}</strong>
+                  <small><code>{{.Operation.ID}}</code> · {{.Bundle}}</small>
+                </span>
+              </label>
+              {{end}}
+            </div>
+          </div>
+          {{end}}
+          <button type="submit">{{t "button.add_scope_set"}}</button>
+        </form>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+<script>
+document.querySelectorAll(".matrix-section").forEach((section) => {
+  const toggles = section.querySelectorAll(".bundle-toggle");
+  toggles.forEach((button) => {
+    button.addEventListener("click", () => {
+      const bundle = button.getAttribute("data-bundle");
+      const checkboxes = section.querySelectorAll('input[type="checkbox"][name="operation_ids"]');
+      checkboxes.forEach((checkbox) => {
+        if (bundle === "all") {
+          checkbox.checked = true;
+          return;
+        }
+        if (bundle === "none") {
+          checkbox.checked = false;
+          return;
+        }
+        if (checkbox.getAttribute("data-bundle") === bundle) {
+          checkbox.checked = true;
+        }
+      });
+    });
+  });
+});
+document.querySelectorAll(".matrix-form").forEach((form) => {
+  const search = form.querySelector(".matrix-search");
+  if (!search) return;
+  search.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase();
+    form.querySelectorAll(".matrix-item").forEach((item) => {
+      const haystack = (item.getAttribute("data-search") || "").toLowerCase();
+      item.style.display = !query || haystack.includes(query) ? "" : "none";
+    });
+  });
+});
+</script>
+{{end}}

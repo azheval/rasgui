@@ -1,0 +1,343 @@
+{{define "execute.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="execute-shell">
+  <article class="card execute-form-card">
+    <h2>{{t "execute.title"}}</h2>
+    {{if .Message}}<div class="alert">{{.Message}}</div>{{end}}
+    <form method="post" class="form-grid" id="exec-form" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <div class="entity-panel">
+        <div class="entity-panel-head">
+          <span class="section-label">{{t "field.entity"}}</span>
+          <span class="subtle-note">{{t "execute.entity_placeholder"}}</span>
+        </div>
+        <div id="entity_filters" class="filter-pills"></div>
+      </div>
+      <div class="wizard-card">
+        <div class="section-label">{{t "execute.quick_actions"}}</div>
+        <div id="guided_scenarios" class="wizard-grid"></div>
+      </div>
+      <div id="operator_flow_host"></div>
+      <div id="journey_summary" class="journey-summary"></div>
+      <label>{{t "field.connection_profile"}}
+        <select id="connection_profile">
+          <option value="">--</option>
+          {{range .ConnectionProfiles}}<option value="{{.ID}}" {{if .IsDefault}}selected{{end}}>{{.Name}} ({{.Host}}:{{.Port}})</option>{{end}}
+        </select>
+      </label>
+      <input type="hidden" name="connection_profile_id" id="connection_profile_id" value="">
+      <input type="hidden" name="favorite_connection_id" id="favorite_connection_id" value="">
+      <input type="hidden" name="favorite_id" id="favorite_id" value="">
+      <input type="hidden" name="wizard_args_json" id="wizard_args_json" value="">
+      <div class="action-library-card">
+        <div class="entity-panel-head">
+          <span class="section-label" id="friendly_action_label"></span>
+          <span class="subtle-note" id="friendly_action_hint"></span>
+        </div>
+        <div id="human_action_list" class="action-library-grid"></div>
+      </div>
+      <div class="wizard-layers-grid">
+        <div class="wizard-layer-card">
+          <div class="entity-panel-head">
+            <span class="section-label" id="playbook_label"></span>
+            <span class="subtle-note" id="playbook_hint"></span>
+          </div>
+          <div id="playbook_list" class="playbook-grid"></div>
+        </div>
+        <div class="wizard-layer-card">
+          <div class="entity-panel-head">
+            <span class="section-label" id="field_guide_label"></span>
+            <span class="subtle-note" id="field_guide_hint"></span>
+          </div>
+          <div id="field_guide" class="field-guide"></div>
+        </div>
+      </div>
+      <label><span id="technical_command_label">{{t "field.operation"}}</span>
+        <select name="operation_id" id="operation_id" required>
+          <option value="">--</option>
+          {{range .Operations}}<option value="{{.ID}}">{{.ID}} - {{.Title}}</option>{{end}}
+        </select>
+        <span class="subtle-note" id="technical_command_hint"></span>
+      </label>
+      <div class="quick-actions-card">
+        <div class="section-label">{{t "execute.quick_actions"}}</div>
+        <div id="quick_actions" class="quick-actions"></div>
+      </div>
+      <div id="wizard_assistant" class="wizard-assistant"></div>
+      <div class="toolbar-grid">
+        <label>{{t "field.favorite"}}
+          <select id="favorite_select">
+            <option value="">--</option>
+          </select>
+        </label>
+        <label>{{t "field.favorite_name"}}
+          <input name="favorite_name" id="favorite_name" autocomplete="off">
+        </label>
+      </div>
+      <p class="subtle-note" id="favorite_note">{{t "favorites.empty"}}</p>
+      <div id="operation_details" class="operation-details"></div>
+      <div id="result_context_host"></div>
+      <div id="smart_wizard_host"></div>
+      <div id="primary_fields" class="dynamic-fields"></div>
+      <details id="advanced_fields_box" class="advanced-box">
+        <summary>{{t "table.parameters"}}</summary>
+        <div id="advanced_fields" class="dynamic-fields"></div>
+      </details>
+      <div class="action-row">
+        <button type="submit">{{t "button.execute"}}</button>
+        <button type="submit" name="action" value="save_favorite" formnovalidate>{{t "button.save_favorite"}}</button>
+        <button type="submit" name="action" value="delete_favorite" id="delete_favorite" formnovalidate>{{t "button.delete_favorite"}}</button>
+      </div>
+    </form>
+  </article>
+  <article class="card execute-result-card">
+    <h2>{{t "execute.result"}}</h2>
+    {{if .LastResult}}
+      <div class="result-meta">
+        <div class="result-row">
+          <span class="result-label"><strong>{{t "execute.command"}}</strong></span>
+          <div class="inline-code">{{range .LastResult.Command}}{{.}} {{end}}</div>
+        </div>
+        <div class="result-row compact">
+          <span class="result-label"><strong>{{t "execute.exit_code"}}</strong></span>
+          <span class="status-chip">{{.LastResult.ExitCode}}</span>
+        </div>
+      </div>
+      {{if .ParsedResultRows}}
+      <div class="parsed-result">
+        <h3>{{t "execute.structured"}}</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>{{t "table.key"}}</th><th>{{t "table.value"}}</th></tr></thead>
+            <tbody>
+            {{range .ParsedResultRows}}
+              <tr><td><code>{{.Key}}</code></td><td>{{.Value}}</td></tr>
+            {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{end}}
+      <h3>{{t "execute.output"}}</h3>
+      <pre class="terminal-output">{{.LastResult.Stdout}}</pre>
+      {{if .LastResult.Stderr}}<h3>{{t "execute.error"}}</h3><pre class="terminal-output">{{.LastResult.Stderr}}</pre>{{end}}
+    {{else}}
+      <p>{{t "execute.placeholder"}}</p>
+    {{end}}
+  </article>
+</section>
+<script>
+window.rasguiOperations = {{.OperationsJS}};
+window.rasguiProfiles = {{.ProfilesJS}};
+window.rasguiFavorites = {{.FavoritesJS}};
+window.rasguiFormValues = {{.FormValuesJS}};
+window.rasguiLang = "{{.Lang}}";
+window.rasguiDefaults = { host: "{{.DefaultRASHost}}", admin_port: "{{.DefaultRASPort}}" };
+window.rasguiLocale = {
+  risk: "{{t "js.risk" }}",
+  selectFavorite: "{{t "js.selectFavorite"}}",
+  noFavorites: "{{t "favorites.empty"}}",
+  selectOperationForFavorites: "{{t "favorites.select_operation"}}",
+  allEntities: "{{t "js.allEntities"}}",
+  quickList: "{{t "js.quickList"}}",
+  quickInfo: "{{t "js.quickInfo"}}",
+  quickCreate: "{{t "js.quickCreate"}}",
+  quickUpdate: "{{t "js.quickUpdate"}}",
+  quickRemove: "{{t "js.quickRemove"}}",
+  operationDetails: "{{t "execute.operation_details"}}",
+  primaryFields: "{{t "field.operation"}}",
+  advancedFields: "{{t "table.parameters"}}",
+  {{if eq .Lang "be"}}
+  selectActionTitle: "Дзеянне",
+  selectActionHint: "Абярыце зразумелае дзеянне, а тэхнічная каманда падставіцца сама",
+  summaryTitle: "Плынь выканання",
+  summaryEntity: "Сутнасць",
+  summaryAction: "Дзеянне",
+  summaryProfile: "Профіль",
+  summaryFavorite: "Абранае",
+  summaryTrack: "Сцэнар працы",
+  summaryPending: "не выбрана",
+  summaryNotSaved: "не захавана",
+  technicalCommand: "Тэхнічная каманда",
+  technicalCommandHint: "Пакінуты для дакладнага кантролю і сумяшчальнасці з rac / ras",
+  stepEntity: "Сутнасць",
+  stepAction: "Дзеянне",
+  stepParams: "Параметры",
+  stepRun: "Выкананне",
+  actionReady: "Гатова да запуску",
+  playbookTitle: "Тып задачы",
+  playbookHint: "Спачатку абярыце рабочы сцэнар, потым канкрэтнае дзеянне",
+  fieldGuideTitle: "Што падрыхтаваць",
+  fieldGuideHint: "Майстар паказвае ключавыя палі для бягучай аперацыі",
+  playbookInspect: "Праверка",
+  playbookInspectHint: "Спісы, інфармацыя і дыягностыка",
+  playbookChange: "Змена",
+  playbookChangeHint: "Абнаўленні, налады і прымяненне",
+  playbookLifecycle: "Жыццёвы цыкл",
+  playbookLifecycleHint: "Стварэнне, рэгістрацыя і выдаленне",
+  playbookControl: "Кіраванне",
+  playbookControlHint: "Адключэнне, спыненне і прымусовыя дзеянні",
+  playbookSecurity: "Доступ",
+  playbookSecurityHint: "Адміністратары, профілі і правілы",
+  playbookSelected: "Абраны сцэнар",
+  fieldGuideEmpty: "Абярыце дзеянне, каб майстар паказаў ключавыя палі.",
+  fieldGuidePrimary: "Асноўныя палі",
+  fieldGuideAdvanced: "Дадатковыя параметры",
+  scenarioSteps: "Сцэнар",
+  labelId: "Ідэнтыфікатар",
+  labelMode: "Сутнасць",
+  labelUtility: "Утыліта",
+  labelRisk: "Рызыка",
+  riskLow: "нізкая",
+  riskMedium: "сярэдняя",
+  riskHigh: "высокая",
+  riskCritical: "крытычная",
+  entityNames: {
+    agent: "Агент",
+    "binary-data-storage": "Сховішча BDS",
+    cluster: "Кластар",
+    connection: "Злучэнне",
+    counter: "Лічыльнік",
+    infobase: "Інфабаза",
+    limit: "Абмежаванне",
+    lock: "Блакіроўка",
+    manager: "Менеджар",
+    process: "Працэс",
+    profile: "Профіль",
+    rule: "Правіла",
+    server: "Сервер",
+    service: "Сэрвіс",
+    "service-setting": "Налада сэрвісу",
+    session: "Сеанс"
+  }
+  {{else if eq .Lang "en"}}
+  selectActionTitle: "Action",
+  selectActionHint: "Choose a human-friendly action and the technical command will be selected automatically",
+  summaryTitle: "Execution flow",
+  summaryEntity: "Entity",
+  summaryAction: "Action",
+  summaryProfile: "Profile",
+  summaryFavorite: "Favorite",
+  summaryTrack: "Work track",
+  summaryPending: "not selected",
+  summaryNotSaved: "not saved",
+  technicalCommand: "Technical command",
+  technicalCommandHint: "Kept for precise control and full rac / ras compatibility",
+  stepEntity: "Entity",
+  stepAction: "Action",
+  stepParams: "Parameters",
+  stepRun: "Run",
+  actionReady: "Ready to execute",
+  playbookTitle: "Work track",
+  playbookHint: "Pick the task type first, then choose a concrete action",
+  fieldGuideTitle: "What to prepare",
+  fieldGuideHint: "The wizard highlights the key fields for the current action",
+  playbookInspect: "Inspect",
+  playbookInspectHint: "Lists, information and diagnostics",
+  playbookChange: "Change",
+  playbookChangeHint: "Updates, settings and apply operations",
+  playbookLifecycle: "Lifecycle",
+  playbookLifecycleHint: "Create, register and remove actions",
+  playbookControl: "Control",
+  playbookControlHint: "Disconnect, terminate and force actions",
+  playbookSecurity: "Access",
+  playbookSecurityHint: "Administrators, profiles and rules",
+  playbookSelected: "Selected track",
+  fieldGuideEmpty: "Choose an action and the wizard will show the key fields.",
+  fieldGuidePrimary: "Primary fields",
+  fieldGuideAdvanced: "Advanced parameters",
+  scenarioSteps: "Scenario",
+  labelId: "Identifier",
+  labelMode: "Entity",
+  labelUtility: "Utility",
+  labelRisk: "Risk",
+  riskLow: "low",
+  riskMedium: "medium",
+  riskHigh: "high",
+  riskCritical: "critical",
+  entityNames: {
+    agent: "Agent",
+    "binary-data-storage": "Binary Data Storage",
+    cluster: "Cluster",
+    connection: "Connection",
+    counter: "Counter",
+    infobase: "Infobase",
+    limit: "Limit",
+    lock: "Lock",
+    manager: "Manager",
+    process: "Process",
+    profile: "Profile",
+    rule: "Rule",
+    server: "Server",
+    service: "Service",
+    "service-setting": "Service Setting",
+    session: "Session"
+  }
+  {{else}}
+  selectActionTitle: "Действие",
+  selectActionHint: "Выберите понятное действие, а техническая команда подставится автоматически",
+  summaryTitle: "Поток выполнения",
+  summaryEntity: "Сущность",
+  summaryAction: "Действие",
+  summaryProfile: "Профиль",
+  summaryFavorite: "Избранное",
+  summaryTrack: "Рабочий сценарий",
+  summaryPending: "не выбрано",
+  summaryNotSaved: "не сохранено",
+  technicalCommand: "Техническая команда",
+  technicalCommandHint: "Оставлена для точного контроля и полной совместимости с rac / ras",
+  stepEntity: "Сущность",
+  stepAction: "Действие",
+  stepParams: "Параметры",
+  stepRun: "Выполнение",
+  actionReady: "Готово к запуску",
+  playbookTitle: "Тип задачи",
+  playbookHint: "Сначала выберите рабочий сценарий, потом конкретное действие",
+  fieldGuideTitle: "Что подготовить",
+  fieldGuideHint: "Мастер показывает ключевые поля для текущей операции",
+  playbookInspect: "Проверка",
+  playbookInspectHint: "Списки, информация и диагностика",
+  playbookChange: "Изменение",
+  playbookChangeHint: "Обновления, настройки и применение",
+  playbookLifecycle: "Жизненный цикл",
+  playbookLifecycleHint: "Создание, регистрация и удаление",
+  playbookControl: "Управление",
+  playbookControlHint: "Отключение, завершение и принудительные действия",
+  playbookSecurity: "Доступ",
+  playbookSecurityHint: "Администраторы, профили и правила",
+  playbookSelected: "Выбранный сценарий",
+  fieldGuideEmpty: "Выберите действие, и мастер покажет ключевые поля.",
+  fieldGuidePrimary: "Основные поля",
+  fieldGuideAdvanced: "Дополнительные параметры",
+  scenarioSteps: "Сценарий",
+  labelId: "Идентификатор",
+  labelMode: "Сущность",
+  labelUtility: "Утилита",
+  labelRisk: "Риск",
+  riskLow: "низкий",
+  riskMedium: "средний",
+  riskHigh: "высокий",
+  riskCritical: "критический",
+  entityNames: {
+    agent: "Агент",
+    "binary-data-storage": "Хранилище BDS",
+    cluster: "Кластер",
+    connection: "Соединение",
+    counter: "Счетчик",
+    infobase: "Инфобаза",
+    limit: "Ограничение",
+    lock: "Блокировка",
+    manager: "Менеджер",
+    process: "Процесс",
+    profile: "Профиль",
+    rule: "Правило",
+    server: "Сервер",
+    service: "Сервис",
+    "service-setting": "Настройка сервиса",
+    session: "Сеанс"
+  }
+  {{end}}
+};
+</script>
+<script src="/static/js/app.js"></script>
+{{end}}

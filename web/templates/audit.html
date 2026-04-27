@@ -1,0 +1,21 @@
+{{define "audit.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="card">
+  <h2>{{t "audit.title"}}</h2>
+  <table>
+    <thead><tr><th>{{t "table.user"}}</th><th>{{t "table.operation"}}</th><th>{{t "table.allowed"}}</th><th>{{t "table.code"}}</th><th>{{t "table.command"}}</th><th>{{t "table.when"}}</th></tr></thead>
+    <tbody>
+    {{range .Audit}}
+      <tr>
+        <td>{{.Username}}</td>
+        <td><code>{{.OperationID}}</code></td>
+        <td>{{.Allowed}}</td>
+        <td>{{.ExitCode}}</td>
+        <td><code>{{.CommandLine}}</code></td>
+        <td>{{.CreatedAt}}</td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}

@@ -1,0 +1,14 @@
+{{define "login.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="card narrow">
+  <h2>{{t "login.title"}}</h2>
+  <p>{{t "login.hint"}}</p>
+  {{if .Message}}<div class="alert">{{.Message}}</div>{{end}}
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>{{t "field.username"}}<input name="username" required></label>
+    <label>{{t "field.password"}}<input name="password" type="password" required></label>
+    <button type="submit">{{t "button.login"}}</button>
+  </form>
+</section>
+{{end}}

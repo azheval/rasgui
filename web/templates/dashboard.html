@@ -1,0 +1,31 @@
+{{define "dashboard.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="grid two">
+  <article class="card">
+    <h2>{{t "dashboard.system"}}</h2>
+    <p>{{t "dashboard.http_port"}}: <strong>{{.DefaultPort}}</strong></p>
+    <p>{{t "dashboard.default_ras"}}: <strong>{{.DefaultRASHost}}:{{.DefaultRASPort}}</strong></p>
+    <p>RAC: <code>{{.DefaultRAC}}</code></p>
+    <p>RAS: <code>{{.DefaultRAS}}</code></p>
+  </article>
+  <article class="card">
+    <h2>{{t "dashboard.summary"}}</h2>
+    <p>{{t "dashboard.users"}}: <strong>{{len .Users}}</strong></p>
+    <p>{{t "dashboard.roles"}}: <strong>{{len .Roles}}</strong></p>
+    <p>{{t "dashboard.operations"}}: <strong>{{len .Operations}}</strong></p>
+  </article>
+</section>
+<section class="card">
+  <h2>{{t "dashboard.last_audit"}}</h2>
+  <table>
+    <thead><tr><th>{{t "table.user"}}</th><th>{{t "table.operation"}}</th><th>{{t "table.allowed"}}</th><th>{{t "table.code"}}</th><th>{{t "table.when"}}</th></tr></thead>
+    <tbody>
+    {{range .Audit}}
+      <tr><td>{{.Username}}</td><td>{{.OperationID}}</td><td>{{.Allowed}}</td><td>{{.ExitCode}}</td><td>{{.CreatedAt}}</td></tr>
+    {{else}}
+      <tr><td colspan="5">{{t "empty.audit"}}</td></tr>
+    {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}

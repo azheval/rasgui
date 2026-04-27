@@ -1,0 +1,43 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Local research / scratch
+.research/
+
+# Go build artifacts
+build/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+coverage.txt
+
+# Runtime data
+data/
+logs/
+tmp/
+temp/
+
+# Node / Playwright
+node_modules/
+test-results/
+playwright-report/
+
+# Env / local overrides
+.env
+.env.*
+!.env.example
+config.local.json
+
+# Misc
+*.log
+test-logs/
+test-data/

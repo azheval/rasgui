@@ -1,0 +1,143 @@
+{{define "connections.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+{{if .Message}}<div class="alert">{{.Message}}</div>{{end}}
+<section class="grid two">
+  <article class="card">
+    <h2>{{t "toolchains.discovered"}}</h2>
+    {{if .DiscoverableToolchains}}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>{{t "field.name"}}</th><th>{{t "field.version"}}</th><th>{{t "field.rac_path"}}</th><th>{{t "field.ras_path"}}</th><th>{{t "table.actions"}}</th></tr></thead>
+          <tbody>
+          {{range .DiscoverableToolchains}}
+            <tr>
+              <td>{{.Name}}</td>
+              <td>{{.Version}}</td>
+              <td>{{.RACPath}}</td>
+              <td>{{.RASPath}}</td>
+              <td>
+                <form method="post" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                  <input type="hidden" name="action" value="import_discovered_toolchain">
+                  <input type="hidden" name="toolchain_name" value="{{.Name}}">
+                  <input type="hidden" name="toolchain_version" value="{{.Version}}">
+                  <input type="hidden" name="rac_path" value="{{.RACPath}}">
+                  <input type="hidden" name="ras_path" value="{{.RASPath}}">
+                  <input type="hidden" name="toolchain_description" value="{{.Description}}">
+                  <button type="submit">{{t "button.import_toolchain"}}</button>
+                </form>
+              </td>
+            </tr>
+          {{end}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      <p>{{t "toolchains.no_discovered"}}</p>
+    {{end}}
+  </article>
+  <article class="card">
+    <h2>{{t "toolchains.create"}}</h2>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="action" value="create_toolchain">
+      <label>{{t "field.name"}}<input name="toolchain_name" required></label>
+      <label>{{t "field.version"}}<input name="toolchain_version" placeholder="8.3.27.2074"></label>
+      <label>{{t "field.rac_path"}}<input name="rac_path" value="{{.DefaultRAC}}" required></label>
+      <label>{{t "field.ras_path"}}<input name="ras_path" value="{{.DefaultRAS}}" required></label>
+      <label>{{t "field.description"}}<input name="toolchain_description"></label>
+      <label><span>{{t "field.default"}}</span><input name="toolchain_is_default" type="checkbox"></label>
+      <button type="submit">{{t "button.create_toolchain"}}</button>
+    </form>
+  </article>
+  <article class="card">
+    <h2>{{t "connections.create"}}</h2>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <label>{{t "field.name"}}<input name="name" required></label>
+      <label>{{t "field.host"}}<input name="host" required></label>
+      <label>{{t "field.port"}}<input name="port" type="number" value="{{.DefaultRASPort}}" required></label>
+      <label>{{t "field.toolchain"}}<select name="toolchain_id">
+        <option value="0">--</option>
+        {{range .ToolchainProfiles}}<option value="{{.ID}}" {{if .IsDefault}}selected{{end}}>{{.Name}} {{if .Version}}({{.Version}}){{end}}</option>{{end}}
+      </select></label>
+      <label>{{t "field.description"}}<input name="description"></label>
+      <label><span>{{t "field.default"}}</span><input name="is_default" type="checkbox"></label>
+      <button type="submit">{{t "button.create_connection"}}</button>
+    </form>
+  </article>
+</section>
+
+<section class="grid two">
+  <article class="card">
+    <h2>{{t "toolchains.list"}}</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{t "field.name"}}</th><th>{{t "field.version"}}</th><th>{{t "field.rac_path"}}</th><th>{{t "field.ras_path"}}</th><th>{{t "field.default"}}</th><th>{{t "field.description"}}</th><th>{{t "table.actions"}}</th></tr></thead>
+        <tbody>
+        {{range .ToolchainProfiles}}
+          <tr>
+            <td colspan="7">
+              <form method="post" class="form-grid compact-form">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="toolchain_id" value="{{.ID}}">
+                <label>{{t "field.name"}}<input name="toolchain_name" value="{{.Name}}" required></label>
+                <label>{{t "field.version"}}<input name="toolchain_version" value="{{.Version}}"></label>
+                <label>{{t "field.rac_path"}}<input name="rac_path" value="{{.RACPath}}" required></label>
+                <label>{{t "field.ras_path"}}<input name="ras_path" value="{{.RASPath}}" required></label>
+                <label>{{t "field.description"}}<input name="toolchain_description" value="{{.Description}}"></label>
+                <label><span>{{t "field.default"}}</span><input name="toolchain_is_default" type="checkbox" {{if .IsDefault}}checked{{end}}></label>
+                <div class="action-row">
+                  <button type="submit" name="action" value="update_toolchain">{{t "button.save"}}</button>
+                  <button type="submit" name="action" value="check_toolchain">{{t "button.check"}}</button>
+                  <button type="submit" name="action" value="delete_toolchain">{{t "button.delete_toolchain"}}</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+        {{else}}
+          <tr><td colspan="7">{{t "empty.audit"}}</td></tr>
+        {{end}}
+        </tbody>
+      </table>
+    </div>
+  </article>
+  <article class="card">
+    <h2>{{t "connections.list"}}</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{t "field.name"}}</th><th>{{t "field.host"}}</th><th>{{t "field.port"}}</th><th>{{t "field.toolchain"}}</th><th>{{t "field.default"}}</th><th>{{t "field.description"}}</th><th>{{t "table.actions"}}</th></tr></thead>
+        <tbody>
+        {{range .ConnectionProfiles}}
+          {{$conn := .}}
+          <tr>
+            <td colspan="7">
+              <form method="post" class="form-grid compact-form">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="connection_id" value="{{.ID}}">
+                <label>{{t "field.name"}}<input name="name" value="{{.Name}}" required></label>
+                <label>{{t "field.host"}}<input name="host" value="{{.Host}}" required></label>
+                <label>{{t "field.port"}}<input name="port" type="number" value="{{.Port}}" required></label>
+                <label>{{t "field.toolchain"}}<select name="toolchain_id">
+                  <option value="0">--</option>
+                  {{range $.ToolchainProfiles}}<option value="{{.ID}}" {{if eq .ID $conn.ToolchainID}}selected{{end}}>{{.Name}} {{if .Version}}({{.Version}}){{end}}</option>{{end}}
+                </select></label>
+                <label>{{t "field.description"}}<input name="description" value="{{.Description}}"></label>
+                <label><span>{{t "field.default"}}</span><input name="is_default" type="checkbox" {{if .IsDefault}}checked{{end}}></label>
+                <div class="action-row">
+                  <button type="submit" name="action" value="update_connection">{{t "button.save"}}</button>
+                  <button type="submit" name="action" value="check_connection">{{t "button.check"}}</button>
+                  <button type="submit" name="action" value="delete_connection">{{t "button.delete_connection"}}</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+        {{else}}
+          <tr><td colspan="7">{{t "empty.audit"}}</td></tr>
+        {{end}}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{{end}}

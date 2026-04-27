@@ -1,0 +1,48 @@
+{{define "base"}}
+<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{t .TitleKey}} | rasgui</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <header class="shell-header">
+    <div class="topbar">
+      <div class="brand-block">
+        <h1>rasgui</h1>
+      </div>
+      <div class="topbar-side">
+        <div class="lang-switch">
+          <a href="/set-lang?lang=en&next={{.CurrentPath}}">{{t "lang.en"}}</a>
+          <a href="/set-lang?lang=be&next={{.CurrentPath}}">{{t "lang.be"}}</a>
+          <a href="/set-lang?lang=ru&next={{.CurrentPath}}">{{t "lang.ru"}}</a>
+        </div>
+        {{if .CurrentUser.Username}}
+        <div class="user-box">
+          <span class="user-pill">{{.CurrentUser.Username}}</span>
+          <form action="/logout" method="post">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <button type="submit">{{t "nav.logout"}}</button>
+          </form>
+        </div>
+        {{end}}
+      </div>
+    </div>
+    {{if .CurrentUser.Username}}
+    <nav class="main-nav">
+      <a href="/">{{t "nav.dashboard"}}</a>
+      <a href="/catalog">{{t "nav.catalog"}}</a>
+      <a href="/execute">{{t "nav.execute"}}</a>
+      {{if .CanManageUsers}}<a href="/users">{{t "nav.users"}}</a>{{end}}
+      {{if .CanManageRoles}}<a href="/roles">{{t "nav.roles"}}</a>{{end}}
+      {{if .CanManageConnections}}<a href="/connections">{{t "nav.connections"}}</a>{{end}}
+      {{if .CanViewAudit}}<a href="/audit">{{t "nav.audit"}}</a>{{end}}
+    </nav>
+    {{end}}
+  </header>
+  <main class="page">{{template "content" .}}</main>
+</body>
+</html>
+{{end}}

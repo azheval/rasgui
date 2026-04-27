@@ -1,0 +1,46 @@
+{{define "users.html"}}{{template "base" .}}{{end}}
+{{define "content"}}
+<section class="grid two">
+  <article class="card">
+    <h2>{{t "users.create"}}</h2>
+    <form method="post" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="action" value="create_user">
+      <label>{{t "field.username"}}<input name="username" required></label>
+      <label>{{t "field.password"}}<input name="password" type="password" required></label>
+      <label>{{t "field.role"}}
+        <select name="role_id">
+          <option value="">{{t "field.without_role"}}</option>
+          {{range .Roles}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+        </select>
+      </label>
+      <button type="submit">{{t "button.create_user"}}</button>
+    </form>
+  </article>
+  <article class="card">
+    <h2>{{t "users.list"}}</h2>
+    <table>
+      <thead><tr><th>{{t "field.username"}}</th><th>{{t "table.roles"}}</th><th>{{t "table.enabled"}}</th><th>{{t "table.actions"}}</th></tr></thead>
+      <tbody>
+      {{range .Users}}
+        <tr>
+          <td>{{.Username}}</td>
+          <td>{{range .Roles}}<code>{{.Name}}</code> {{end}}</td>
+          <td>{{.Enabled}}</td>
+          <td>
+            {{if ne .ID $.CurrentUser.ID}}
+            <form method="post">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+              <input type="hidden" name="action" value="delete_user">
+              <input type="hidden" name="user_id" value="{{.ID}}">
+              <button type="submit">{{t "button.delete_user"}}</button>
+            </form>
+            {{end}}
+          </td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </article>
+</section>
+{{end}}

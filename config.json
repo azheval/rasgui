@@ -1,0 +1,12 @@
+{
+  "http_port": 8099,
+  "data_dir": "data",
+  "log_dir": "logs",
+  "log_level": "info",
+  "default_ras_host": "localhost",
+  "default_ras_port": 1545,
+  "rac_path": "C:\\Program Files\\1cv8\\8.3.27.2074\\bin\\rac.exe",
+  "ras_path": "C:\\Program Files\\1cv8\\8.3.27.2074\\bin\\ras.exe",
+  "default_admin_user": "admin",
+  "default_admin_password": "admin123"
+}
